@@ -157,7 +157,7 @@ def invertir_imagen(imagen, mostrar=True):
         
     return capa_inv
 
-def fusionar_imagenes(imagen1, imagen2, alfa=0.5, mostrar=True):
+def suma_ponderada(imagen1, imagen2, alfa=0.5, mostrar=True):
     h, w = imagen1.shape[0], imagen1.shape[1]
 
     img2_pil = Image.fromarray((imagen2 * (255 if imagen2.dtype == np.float32 or imagen2.dtype == np.float64 else 1)).astype(np.uint8))
@@ -188,14 +188,14 @@ def fusionar_imagenes(imagen1, imagen2, alfa=0.5, mostrar=True):
         plt.subplot(1, 3, 3)
         plt.imshow(fusion)
         plt.axis("off")
-        plt.title("Fusión de imágenes")
+        plt.title(f"Suma ponderada alpha = {alfa}") 
 
         plt.tight_layout()
         plt.show()
         
     return fusion
 
-def suma_ponderada(imagen1, imagen2, alpha=0.3, mostrar=True):
+def suma_imagenes(imagen1, imagen2, mostrar=True):
     h, w = imagen1.shape[0], imagen1.shape[1]
     
     if np.issubdtype(imagen2.dtype, np.floating):
@@ -209,23 +209,27 @@ def suma_ponderada(imagen1, imagen2, alpha=0.3, mostrar=True):
     
     A = imagen1.astype(np.float32)
     B = img2_resized.astype(np.float32)
-    
-    fusion = alpha * A + (1.0 - alpha) * B
-    
+
+    fusion = (A + B) // 2 
     fusion = np.clip(fusion, 0, val_max).astype(imagen1.dtype)
 
     if mostrar:
         plt.figure(figsize=(12, 4))
 
-        plt.subplot(1, 2, 1)
+        plt.subplot(1, 3, 1)
         plt.imshow(imagen1)
         plt.axis("off")
-        plt.title("Imagen original")
+        plt.title("Imagen 1")
 
-        plt.subplot(1, 2, 2)
+        plt.subplot(1, 3, 2)
+        plt.imshow(img2_resized)
+        plt.axis("off")
+        plt.title("Imagen 2 (Ajustada)")
+
+        plt.subplot(1, 3, 3)
         plt.imshow(fusion)
         plt.axis("off")
-        plt.title(f"Imagen fusionada (alpha={alpha})")
+        plt.title("Suma de matrices") 
 
         plt.tight_layout()
         plt.show()
@@ -586,20 +590,21 @@ def calcular_histograma(imagen, mostrar=True):
             plt.show()
 
     return hist_datos
-
-def segmentar_hsv(imagen, lower_color=(5, 100, 100), upper_color=(25, 255, 255), es_bgr=True, mostrar=True):
+def segmentar_hsv(imagen, lower_color=(5, 100, 100), upper_color=(25, 255, 255), es_bgr=False, mostrar=True):
     if es_bgr:
         img_bgr = np.copy(imagen)
         img_rgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
     else:
         img_temp = np.copy(imagen)
+        # Corregido: evaluamos img_temp, no img_rgb
         if np.issubdtype(img_temp.dtype, np.floating) or img_temp.max() <= 1.0:
             img_temp = (img_temp * 255).astype(np.uint8)
+        
+        # Ahora sí asignamos img_rgb para que el resto del código funcione
         img_rgb = img_temp
-        img_bgr = cv2.cvtColor(img_temp, cv2.COLOR_RGB2BGR)
+        img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
 
     hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
-
     mask = cv2.inRange(hsv, np.array(lower_color), np.array(upper_color))
     seg_color_bgr = cv2.bitwise_and(img_bgr, img_bgr, mask=mask)
     seg_color_rgb = cv2.cvtColor(seg_color_bgr, cv2.COLOR_BGR2RGB)

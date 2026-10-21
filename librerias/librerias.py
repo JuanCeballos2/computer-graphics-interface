@@ -509,9 +509,9 @@ def ampliar_region(imagen, centro_x=None, centro_y=None, ancho_region=100, alto_
     recorte = imagen[start_row:end_row, start_col:end_col]
     
     if recorte.ndim == 3:
-        matriz_zoom = np.ones((zoom_factor, zoom_factor, 1))
+        matriz_zoom = np.ones((zoom_factor, zoom_factor, 1), dtype=recorte.dtype)
     else:
-        matriz_zoom = np.ones((zoom_factor, zoom_factor))
+        matriz_zoom = np.ones((zoom_factor, zoom_factor), dtype=recorte.dtype)
         
     zoomed = np.kron(recorte, matriz_zoom)
     zoomed = np.clip(zoomed, 0, _obtener_valor_maximo(imagen)).astype(imagen.dtype)
